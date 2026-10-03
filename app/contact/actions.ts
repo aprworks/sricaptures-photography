@@ -38,7 +38,7 @@ export async function submitInquiry(_prev: InquiryState, formData: FormData): Pr
     return {
       status: "error",
       values,
-      message: `Something went wrong sending your message. Please email ${site.contact.email} directly — I'd love to hear from you.`,
+      message: `Something went wrong sending your message. Please email ${site.contact.email} directly or WhatsApp ${site.contact.phone} — we'd love to hear from you.`,
     };
   }
 

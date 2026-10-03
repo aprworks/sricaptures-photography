@@ -5,8 +5,12 @@ import { site } from "@/content/site";
 /**
  * Delivery layer for contact-form inquiries.
  *
- * Choose a provider with CONTACT_PROVIDER in .env.local:
- *   resend    → emails you via Resend      (RESEND_API_KEY, CONTACT_TO_EMAIL, CONTACT_FROM_EMAIL)
+ * Enquiries are emailed to CONTACT_TO_EMAIL (falls back to site.contact.email).
+ * Choose a provider with CONTACT_PROVIDER in .env.local (default: formsubmit):
+ *   formsubmit → emails you via FormSubmit.co — no account or API key needed.
+ *                The very first enquiry triggers a one-time "Activate form" email;
+ *                click it, and every enquiry after that lands in your inbox.
+ *   resend    → emails you via Resend      (RESEND_API_KEY, CONTACT_FROM_EMAIL)
  *   formspree → forwards to Formspree      (FORMSPREE_ENDPOINT)
  *   log       → prints to the server console (development only)
  *
@@ -52,7 +56,7 @@ function toHtml(v: InquiryValues) {
 
 const resend: Sender = async (v) => {
   const key = process.env.RESEND_API_KEY;
-  const to = process.env.CONTACT_TO_EMAIL ?? site.contact.email;
+  const to = process.env.CONTACT_TO_EMAIL || site.contact.email;
   const from = process.env.CONTACT_FROM_EMAIL;
   if (!key || !from) return { ok: false, error: "Resend is not configured (RESEND_API_KEY / CONTACT_FROM_EMAIL)." };
   const res = await fetch("https://api.resend.com/emails", {
@@ -68,6 +72,32 @@ const resend: Sender = async (v) => {
     }),
   });
   if (!res.ok) return { ok: false, error: `Resend responded ${res.status}` };
+  return { ok: true };
+};
+
+const formsubmit: Sender = async (v) => {
+  const to = process.env.CONTACT_TO_EMAIL || site.contact.email;
+  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      // FormSubmit only accepts submissions that come from a website
+      Origin: site.url,
+      Referer: `${site.url}/contact`,
+    },
+    body: JSON.stringify({
+      _subject: `New enquiry — ${v.shootType} — ${v.name}`,
+      _replyto: v.email,
+      _template: "table",
+      _captcha: "false",
+      ...Object.fromEntries((Object.keys(LABELS) as (keyof InquiryValues)[]).filter((k) => v[k]).map((k) => [LABELS[k], v[k]])),
+    }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { success?: string | boolean; message?: string };
+  if (!res.ok || String(data.success) !== "true") {
+    return { ok: false, error: `FormSubmit responded ${res.status}: ${data.message ?? "unknown error"}` };
+  }
   return { ok: true };
 };
 
@@ -90,10 +120,10 @@ const log: Sender = async (v) => {
   return { ok: true };
 };
 
-const senders: Record<string, Sender> = { resend, formspree, log };
+const senders: Record<string, Sender> = { formsubmit, resend, formspree, log };
 
 export async function sendInquiry(values: InquiryValues): Promise<SendResult> {
-  const sender = senders[process.env.CONTACT_PROVIDER ?? "log"];
+  const sender = senders[process.env.CONTACT_PROVIDER || "formsubmit"];
   if (!sender) return { ok: false, error: `Unknown CONTACT_PROVIDER "${process.env.CONTACT_PROVIDER}"` };
   try {
     return await sender(values);
