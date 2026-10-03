@@ -1,26 +1,408 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — change the look of the whole site from here.
+   ═══════════════════════════════════════════════════════════════════════ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f4f1ec; /* warm off-white page background */
+  --paper-deep: #ebe7df; /* alternate section background */
+  --ink: #12110f; /* near-black text + dark sections */
+  --ink-soft: #2b2a27;
+  --mute: #6f6b63; /* secondary text (AA on --paper) */
+  --line: rgba(18, 17, 15, 0.14);
+  --accent: #9a4a29; /* the one accent: a muted clay. Used sparingly. */
+
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  --header-h: 4.5rem;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-mute: var(--mute);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-display: var(--font-display), "Times New Roman", serif;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ───────────── Base ───────────── */
+html {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+img,
+video {
+  max-width: 100%;
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.on-dark :focus-visible {
+  outline-color: #fff;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.75rem 1.25rem;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* ───────────── Layout helpers ───────────── */
+.container-x {
+  width: 100%;
+  max-width: 1760px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.section {
+  padding-block: clamp(4.5rem, 10vw, 10rem);
+}
+
+/* ───────────── Typography ───────────── */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3rem, 9.5vw, 9.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 6vw, 5.75rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 3.6vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.display-sm {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--mute);
+}
+.on-dark .eyebrow {
+  color: rgba(255, 255, 255, 0.7);
+}
+.lede {
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 38rem;
+}
+.on-dark .lede {
+  color: rgba(255, 255, 255, 0.82);
+}
+.prose-calm p + p {
+  margin-top: 1.1em;
+}
+.prose-calm {
+  color: var(--ink-soft);
+  max-width: 36rem;
+}
+
+/* ───────────── Links & buttons ───────────── */
+.link-underline {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+  transition: background-size 0.45s var(--ease);
+}
+.link-underline:hover {
+  background-size: 0 1px;
+  background-position: 100% 100%;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.9rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  transition:
+    background-color 0.35s var(--ease),
+    color 0.35s var(--ease),
+    border-color 0.35s var(--ease);
+  cursor: pointer;
+  text-align: center;
+}
+.btn-solid {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-solid:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+}
+.btn-outline:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-light {
+  background: #fff;
+  color: var(--ink);
+  border-color: #fff;
+}
+.btn-light:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-outline-light {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.btn-outline-light:hover {
+  background: #fff;
+  color: var(--ink);
+  border-color: #fff;
+}
+.btn .arrow {
+  transition: transform 0.35s var(--ease);
+}
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.arrow-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.arrow-link .arrow {
+  transition: transform 0.35s var(--ease);
+}
+.arrow-link:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* ───────────── Photography ───────────── */
+.photo-frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper-deep);
+}
+.photo-zoom img {
+  transition: transform 1.2s var(--ease);
+}
+.photo-zoom:hover img,
+a:focus-visible .photo-zoom img {
+  transform: scale(1.035);
+}
+
+/* ───────────── Motion (all gated on reduced-motion) ───────────── */
+.page-in {
+  animation: page-in 0.7s var(--ease) both;
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Content is only hidden when JS is present (class added by an inline script in <head>),
+   so no-JS visitors and crawlers always see everything. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 0.9s var(--ease),
+      transform 0.9s var(--ease);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+  .js .reveal-image {
+    clip-path: inset(0 0 8% 0);
+    opacity: 0;
+    transition:
+      opacity 0.9s var(--ease),
+      clip-path 1.2s var(--ease);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js .reveal-image.is-in {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+
+  /* Hero: slow settle + scroll parallax (CSS only, progressive enhancement) */
+  .hero-media {
+    animation: hero-settle 2.4s var(--ease) both;
+  }
+  @keyframes hero-settle {
+    from {
+      transform: scale(1.06);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+  @supports (animation-timeline: scroll()) {
+    .hero-parallax {
+      animation: hero-parallax linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 90vh;
+    }
+    @keyframes hero-parallax {
+      to {
+        transform: translateY(12vh) scale(1.04);
+      }
+    }
+    .hero-fade {
+      animation: hero-fade linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 60vh;
+    }
+    @keyframes hero-fade {
+      to {
+        opacity: 0;
+        transform: translateY(-3vh);
+      }
+    }
+  }
+}
+
+/* Lightbox <dialog> */
+dialog.lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(10, 10, 9, 0.96);
+  color: #fff;
+}
+dialog.lightbox::backdrop {
+  background: transparent;
+}
+
+/* Hide scrollbars on horizontal chip rows */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ───────────── Forms ───────────── */
+.field {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(18, 17, 15, 0.35);
+  border-radius: 0;
+  padding: 0.8rem 0;
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--ink);
+  transition: border-color 0.25s;
+  appearance: none;
+}
+.field::placeholder {
+  color: rgba(18, 17, 15, 0.38);
+}
+.field:hover {
+  border-color: var(--ink);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 1px 0 0 var(--ink);
+}
+.field[aria-invalid="true"] {
+  border-color: #a1260f;
+}
+select.field {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%2312110f' stroke-width='1.4'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.15rem center;
+  padding-right: 1.75rem;
+}
+textarea.field {
+  resize: vertical;
+  min-height: 9rem;
+  line-height: 1.55;
 }
